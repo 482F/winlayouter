@@ -1,0 +1,110 @@
+class layouter extends chainParallelizer {
+  __new(params*) {
+    super.__new(layouter._layouter(params*))
+  }
+
+  class _layouter {
+    __new(def) {
+      this.def := def
+      this.hwnd := 0
+    }
+    launch() {
+      if (this._detectHwnd() == '') { ; 既にウィンドウがある場合、何もしない
+        return
+      }
+
+      if (this.def.hasProp('target')) {
+        idq := '"""'
+        bq := '``'
+
+        args := ''
+        if this.def.hasProp('args') {
+          args .= '-argumentlist ' . idq
+        }
+        for arg in util.getProp(this.def, 'args', []) {
+          args .= bq . idq . arg . bq . idq . ' '
+        }
+        args := regExReplace(args, ' $', idq)
+
+        cmd := 'powershell.exe -noexit -command "start-process -filepath ' . idq . this.def.target . idq . ' ' . args . '"'
+
+        run(cmd, util.getProp(this.def, 'workingDir', ''), 'hide')
+
+
+      } else if (this.def.hasProp('chromeUrl')) {
+        cmd := 'C:\Program Files\Google\Chrome\Application\chrome.exe ' . this.def.chromeUrl
+        if (util.getProp(this.def, 'newWin', false)) {
+          cmd .= ' --new-window'
+        }
+        if (this.def.hasProp('profile')) {
+          cmd .= ' --profile-directory="' . this.def.profile . '"'
+        }
+        run(cmd)
+      } else {
+        this.def.func()
+      }
+
+      return {
+        name: '_detectHwnd',
+        params: [],
+      }
+    }
+
+    _detectHwnd(start := 0) {
+      if (start == 0) {
+        start := a_tickcount
+      }
+
+      hwnd := winWait(this.def.winTitle, , 0.1)
+
+      if (hwnd != 0) {
+        this.hwnd := 'ahk_id ' . hwnd
+        return
+      }
+
+      if (util.getProp(this.def, 'timeout', 10) * 1000 < a_tickcount - start) {
+        throw Error('ウィンドウが見つかりませんでした')
+      }
+
+      return {
+        name: '_detectHwnd',
+        params: [start],
+      }
+    }
+
+    monitor(num) {
+      monitorGet(num, &left, &top)
+      winMove(left + 10, top + 10, , , this.hwnd)
+
+      return this
+    }
+
+    _winMove(key) {
+      while (not winActive(this.hwnd)) {
+        winActivate(this.hwnd)
+      }
+      send('{LWin down}' . key . '{LWin up}')
+      sleep(300)
+    }
+    left() {
+      this._winMove('{Left}')
+      return this
+    }
+    right() {
+      this._winMove('{Right}')
+      return this
+    }
+    below() {
+      this._winMove('{Down}')
+      return this
+    }
+    above() {
+      this._winMove('{Up}')
+      return this
+    }
+    full() {
+      winMaximize(this.hwnd)
+      return this
+    }
+  }
+}

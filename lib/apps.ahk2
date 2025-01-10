@@ -1,0 +1,35 @@
+; chrome://version/
+; 上記を開いた際の `プロフィール パス` の末尾
+profiles := {
+  main: 'Default',
+  sub: 'Profile 1',
+}
+
+_apps := {
+  ahk2doc: {
+    chromeUrl: 'https://ahkscript.github.io/ja/docs/v2/misc/WinTitle.htm',
+    newWin: false,
+    profile: profiles.sub,
+    winTitle: 'WinTitle ahk_exe chrome.exe',
+    timeout: 10,
+  },
+  windowsDir: {
+    target: 'C:\Windows',
+    winTitle: 'C:\Windows ahk_exe explorer.exe',
+  },
+  psh: {
+    target: 'powershell.exe',
+    args: ['-noexit', '-command', 'pwd; echo "ウィンレイアウター";'],
+    winTitle: 'Windows PowerShell',
+  },
+  cmd: {
+    target: 'cmd.exe',
+    winTitle: 'cmd.exe',
+    workingDir: 'C:\',
+  },
+}
+
+apps := {}
+for key, value in _apps.ownProps() {
+  apps.%key% := ((value, _) => layouter(value).launch()).bind(value)
+}

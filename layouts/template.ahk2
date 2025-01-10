@@ -1,0 +1,6 @@
+#include ..\lib\default.ahk2
+
+apps.ahk2doc().monitor(2).full()
+apps.windowsDir().monitor(1).left()
+apps.psh().monitor(1).right().above()
+apps.cmd().monitor(1).right().below()

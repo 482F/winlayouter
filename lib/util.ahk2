@@ -1,0 +1,47 @@
+class util {
+  static getProp(obj, prop, defaultValue) {
+    if (obj.hasProp(prop)) {
+      return obj.%prop%
+    } else {
+      return defaultValue
+    }
+  }
+}
+
+class chainParallelizer {
+  __new(obj) {
+    this.obj := obj
+    this.queue := []
+    this.running := false
+  }
+  __call(name, params) {
+    this.queue.push({
+      name: name,
+      params: params,
+    })
+
+    this.dequeue()
+    return this
+  }
+
+  dequeue() {
+    setTimer(() => this._dequeue(), -100)
+  }
+
+  _dequeue() {
+    if (this.running || this.queue.length <= 0) {
+      return
+    }
+
+    this.running := true
+
+    element := this.queue.removeAt(1)
+    next := this.obj.%element.name%(element.params*)
+    if (next.hasProp('name')) {
+      this.queue.insertAt(1, next)
+    }
+
+    this.running := false
+    this.dequeue()
+  }
+}
